@@ -1,6 +1,7 @@
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer
 
@@ -37,16 +38,16 @@ local Window = Rayfield:CreateWindow({
     }
 })
 
--- Tab Player
+--========================--
+-- 🧍 Tab Player (Speed)
+--========================--
 local PlayerTab = Window:CreateTab("Player", 4483362458)
 
--- Variables
 local SpeedValue = 16
 local SpeedEnabled = false
 local SmoothFactor = 10
 local velocity = Vector3.new(0, 0, 0)
 
--- Slider
 local WalkSpeedSlider = PlayerTab:CreateSlider({
     Name = "WalkSpeed",
     Range = {16, 300},
@@ -59,7 +60,6 @@ local WalkSpeedSlider = PlayerTab:CreateSlider({
     end
 })
 
--- Toggle
 local WalkSpeedToggle = PlayerTab:CreateToggle({
     Name = "Enable WalkSpeed",
     CurrentValue = false,
@@ -72,7 +72,6 @@ local WalkSpeedToggle = PlayerTab:CreateToggle({
     end
 })
 
--- Function ambil karakter dan komponen
 local function getCharParts()
     local char = player.Character
     if not char then return end
@@ -83,7 +82,6 @@ local function getCharParts()
     end
 end
 
--- Movement handler
 RunService.RenderStepped:Connect(function(dt)
     if not SpeedEnabled then return end
 
@@ -101,19 +99,18 @@ RunService.RenderStepped:Connect(function(dt)
     root.CFrame = root.CFrame + (velocity * dt)
 end)
 
--- Reset saat karakter respawn
 player.CharacterAdded:Connect(function(char)
     char:WaitForChild("HumanoidRootPart")
     char:WaitForChild("Humanoid")
     velocity = Vector3.new(0, 0, 0)
+end)
 
--- Lanjutan dari kode sebelumnya
-local TweenService = game:GetService("TweenService")
-
--- Tambah Tab Teleport
+--========================--
+-- 🌊 Tab Teleport (Sea 3)
+--========================--
 local TeleportTab = Window:CreateTab("Teleport", 6034287595)
 
--- Daftar koordinat island di Sea 3 (approximate)
+-- Lokasi-lokasi Sea 3
 local Islands = {
     ["Castle on the Sea"] = Vector3.new(-5500, 313, -2800),
     ["Port Town"] = Vector3.new(-6100, 75, 1630),
@@ -124,11 +121,10 @@ local Islands = {
     ["Sea of Treats"] = Vector3.new(-12000, 110, 11000)
 }
 
--- Variabel
 local SelectedIsland = nil
-local TweenSpeed = 300 -- kecepatan teleport
+local TweenSpeed = 300 -- kecepatan teleport (semakin besar semakin cepat)
 
--- Dropdown pilih pulau
+-- Dropdown pilihan island
 local IslandDropdown = TeleportTab:CreateDropdown({
     Name = "Select Island",
     Options = {},
@@ -139,7 +135,7 @@ local IslandDropdown = TeleportTab:CreateDropdown({
     end,
 })
 
--- Masukkan nama island ke dropdown
+-- Isi dropdown otomatis
 for name, _ in pairs(Islands) do
     IslandDropdown:AddOption(name)
 end
@@ -159,8 +155,8 @@ local function TweenTeleport(position)
     tween:Play()
 end
 
--- Tombol Teleport
-local TeleportButton = TeleportTab:CreateButton({
+-- Tombol teleport
+TeleportTab:CreateButton({
     Name = "Teleport Now",
     Callback = function()
         if SelectedIsland and Islands[SelectedIsland] then
@@ -179,4 +175,3 @@ local TeleportButton = TeleportTab:CreateButton({
         end
     end,
 })
- 
