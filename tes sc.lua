@@ -107,3 +107,4 @@ player.CharacterAdded:Connect(function(char)
     char:WaitForChild("Humanoid")
     velocity = Vector3.new(0, 0, 0)
 end)
+
