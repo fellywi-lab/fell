@@ -106,5 +106,77 @@ player.CharacterAdded:Connect(function(char)
     char:WaitForChild("HumanoidRootPart")
     char:WaitForChild("Humanoid")
     velocity = Vector3.new(0, 0, 0)
-end)
 
+-- Lanjutan dari kode sebelumnya
+local TweenService = game:GetService("TweenService")
+
+-- Tambah Tab Teleport
+local TeleportTab = Window:CreateTab("Teleport", 6034287595)
+
+-- Daftar koordinat island di Sea 3 (approximate)
+local Islands = {
+    ["Castle on the Sea"] = Vector3.new(-5500, 313, -2800),
+    ["Port Town"] = Vector3.new(-6100, 75, 1630),
+    ["Hydra Island"] = Vector3.new(5200, 100, -3200),
+    ["Great Tree"] = Vector3.new(2285, 25, -6400),
+    ["Floating Turtle"] = Vector3.new(-12000, 340, -8700),
+    ["Haunted Castle"] = Vector3.new(-9500, 140, 6100),
+    ["Sea of Treats"] = Vector3.new(-12000, 110, 11000)
+}
+
+-- Variabel
+local SelectedIsland = nil
+local TweenSpeed = 300 -- kecepatan teleport
+
+-- Dropdown pilih pulau
+local IslandDropdown = TeleportTab:CreateDropdown({
+    Name = "Select Island",
+    Options = {},
+    CurrentOption = "",
+    Flag = "IslandDropdown",
+    Callback = function(Option)
+        SelectedIsland = Option
+    end,
+})
+
+-- Masukkan nama island ke dropdown
+for name, _ in pairs(Islands) do
+    IslandDropdown:AddOption(name)
+end
+
+-- Fungsi Tween Teleport
+local function TweenTeleport(position)
+    local char = player.Character
+    if not char then return end
+    local root = char:FindFirstChild("HumanoidRootPart")
+    if not root then return end
+
+    local distance = (root.Position - position).Magnitude
+    local tweenTime = math.clamp(distance / TweenSpeed, 1, 10)
+
+    local tweenInfo = TweenInfo.new(tweenTime, Enum.EasingStyle.Linear)
+    local tween = TweenService:Create(root, tweenInfo, {CFrame = CFrame.new(position)})
+    tween:Play()
+end
+
+-- Tombol Teleport
+local TeleportButton = TeleportTab:CreateButton({
+    Name = "Teleport Now",
+    Callback = function()
+        if SelectedIsland and Islands[SelectedIsland] then
+            Rayfield:Notify({
+                Title = "Teleporting...",
+                Content = "Traveling to " .. SelectedIsland .. " 🌊",
+                Duration = 3
+            })
+            TweenTeleport(Islands[SelectedIsland])
+        else
+            Rayfield:Notify({
+                Title = "Error",
+                Content = "Please select an island first!",
+                Duration = 3
+            })
+        end
+    end,
+})
+ 
