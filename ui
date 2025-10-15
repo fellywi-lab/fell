@@ -1,0 +1,27 @@
+local than = game:HttpGet("Github Link UI")
+        local Fluent = loadstring(than)()
+
+        local Window = Fluent:CreateWindow({
+            Title = "ThanHub [ Free Version ]",
+            Icon = "rbxassetid://131711698212719",
+            Author = "discord.gg/thanhub",
+            Folder = "ThanHub",
+            Size = UDim2.fromOffset(560, 400),
+            Transparent = true,
+            Theme = "Dark",
+            SideBarWidth = 170,
+            HasOutline = true
+        })
+
+local Tabs = {}
+
+do
+    Tabs.Misc        = Window:Tab({ Title = "Misc", Icon = "gamepad-2" })
+end
+
+
+Window:SelectTab(1)
+Window:EditOpenButton({
+    Enabled = false
+})
+Window:SetToggleKey(Enum.KeyCode.RightControl)
