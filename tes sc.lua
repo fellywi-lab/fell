@@ -1,18 +1,18 @@
+-- // Load Rayfield UI
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local RunService = game:GetService("RunService")
-local TweenService = game:GetService("TweenService")
 local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
 local player = Players.LocalPlayer
 
--- Window setup
+-- // Window Setup
 local Window = Rayfield:CreateWindow({
     Name = "Coba Coba Hub",
     LoadingTitle = "Coba Coba Hub",
     LoadingSubtitle = "by Fell",
-    ShowText = "Rayfield",
     Theme = "Default",
-    ToggleUIKeybind = "K",
+    ToggleUIKeybind = Enum.KeyCode.K,
 
     ConfigurationSaving = {
         Enabled = true,
@@ -22,33 +22,26 @@ local Window = Rayfield:CreateWindow({
 
     Discord = {
         Enabled = true,
-        Invite = "Am3HvspbV6", -- cukup kode undangan
+        Invite = "Am3HvspbV6",
         RememberJoins = true
     },
 
     KeySystem = false,
-    KeySettings = {
-        Title = "Untitled",
-        Subtitle = "Key System",
-        Note = "No method of obtaining the key is provided",
-        FileName = "Key",
-        SaveKey = true,
-        GrabKeyFromSite = false,
-        Key = {"Hello"}
-    }
 })
 
---========================--
--- 🧍 Tab Player (Speed)
---========================--
+------------------------------------------------
+-- // PLAYER TAB
+------------------------------------------------
 local PlayerTab = Window:CreateTab("Player", 4483362458)
 
+-- Variables
 local SpeedValue = 16
 local SpeedEnabled = false
 local SmoothFactor = 10
 local velocity = Vector3.new(0, 0, 0)
 
-local WalkSpeedSlider = PlayerTab:CreateSlider({
+-- Slider
+PlayerTab:CreateSlider({
     Name = "WalkSpeed",
     Range = {16, 300},
     Increment = 1,
@@ -60,7 +53,8 @@ local WalkSpeedSlider = PlayerTab:CreateSlider({
     end
 })
 
-local WalkSpeedToggle = PlayerTab:CreateToggle({
+-- Toggle
+PlayerTab:CreateToggle({
     Name = "Enable WalkSpeed",
     CurrentValue = false,
     Flag = "WalkSpeedToggle",
@@ -72,6 +66,7 @@ local WalkSpeedToggle = PlayerTab:CreateToggle({
     end
 })
 
+-- Function ambil karakter dan komponen
 local function getCharParts()
     local char = player.Character
     if not char then return end
@@ -82,6 +77,7 @@ local function getCharParts()
     end
 end
 
+-- Movement handler
 RunService.RenderStepped:Connect(function(dt)
     if not SpeedEnabled then return end
 
@@ -105,12 +101,12 @@ player.CharacterAdded:Connect(function(char)
     velocity = Vector3.new(0, 0, 0)
 end)
 
---========================--
--- 🌊 Tab Teleport (Sea 3)
---========================--
-local TeleportTab = Window:CreateTab("Teleport", 6034287595)
+------------------------------------------------
+-- // TELEPORT TAB (SEA 3)
+------------------------------------------------
+local TeleportTab = Window:CreateTab("Teleport (Sea 3)", 6034287595)
 
--- Lokasi-lokasi Sea 3
+-- Daftar koordinat island Sea 3
 local Islands = {
     ["Castle on the Sea"] = Vector3.new(-5500, 313, -2800),
     ["Port Town"] = Vector3.new(-6100, 75, 1630),
@@ -122,9 +118,9 @@ local Islands = {
 }
 
 local SelectedIsland = nil
-local TweenSpeed = 300 -- kecepatan teleport (semakin besar semakin cepat)
+local TweenSpeed = 300 -- semakin besar = semakin cepat
 
--- Dropdown pilihan island
+-- Dropdown pilih island
 local IslandDropdown = TeleportTab:CreateDropdown({
     Name = "Select Island",
     Options = {},
@@ -135,7 +131,6 @@ local IslandDropdown = TeleportTab:CreateDropdown({
     end,
 })
 
--- Isi dropdown otomatis
 for name, _ in pairs(Islands) do
     IslandDropdown:AddOption(name)
 end
@@ -155,7 +150,7 @@ local function TweenTeleport(position)
     tween:Play()
 end
 
--- Tombol teleport
+-- Tombol Teleport
 TeleportTab:CreateButton({
     Name = "Teleport Now",
     Callback = function()
