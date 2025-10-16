@@ -26,11 +26,6 @@ local Window = Rayfield:CreateWindow({
 -------------------------------------------------
 -- 🧍 INVITE DISCORD
 -------------------------------------------------
-local PlayerTab = Window:CreateTab("MAIN", 4483362458)
-
--------------------------------------------------
--- 💜 DISCORD INVITE BUTTON (Stylish + Functional)
--------------------------------------------------
 local DiscordInviteLink = "https://discord.gg/Am3HvspbV6" -- ganti dengan link server kamu
 
 -- Tombol dengan warna khas Discord
@@ -176,4 +171,5 @@ Players.PlayerRemoving:Connect(function(plr)
 		esp:Destroy()
 	end
 end)
+
 
