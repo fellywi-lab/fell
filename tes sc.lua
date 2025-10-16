@@ -23,6 +23,64 @@ local Window = Rayfield:CreateWindow({
 	}
 })
 
+local PlayerTab = Window:CreateTab("Main", 4483362458)
+
+-- Services
+local Players = game:GetService("Players")
+local Workspace = game:GetService("Workspace")
+local RunService = game:GetService("RunService")
+
+local player = Players.LocalPlayer
+
+-- Settings
+local AutoFishingEnabled = true
+local FishingDelay = 1 -- delay per cast
+
+-- Fungsi untuk mendapatkan pancing/rod
+local function GetRod()
+    for _, tool in pairs(player.Backpack:GetChildren()) do
+        if tool.Name:lower():find("rod") then
+            return tool
+        end
+    end
+    -- juga cek jika sudah equip
+    for _, tool in pairs(player.Character:GetChildren()) do
+        if tool:IsA("Tool") and tool.Name:lower():find("rod") then
+            return tool
+        end
+    end
+    return nil
+end
+
+-- Fungsi auto cast & catch
+local function AutoFish()
+    if not AutoFishingEnabled then return end
+
+    local rod = GetRod()
+    if not rod then return end
+
+    -- Equip rod jika belum
+    if not rod.Parent:IsA("Model") then
+        rod.Parent = player.Character
+    end
+
+    -- Trigger fishing (contoh, tergantung mekanik game)
+    if rod:FindFirstChild("Handle") then
+        local clickEvent = rod:FindFirstChild("Activate") or rod:FindFirstChildWhichIsA("RemoteEvent")
+        if clickEvent then
+            clickEvent:FireServer() -- kirim trigger catch
+        end
+    end
+end
+
+-- Loop auto fishing
+RunService.RenderStepped:Connect(function()
+    if AutoFishingEnabled then
+        AutoFish()
+        wait(FishingDelay)
+    end
+end)
+
 -------------------------------------------------
 -- 🧍 PLAYER TAB
 -------------------------------------------------
@@ -174,3 +232,4 @@ local PlayerTab = Window:CreateTab("MISC", 4483362458)
 
 -- 🔄 Load Dropdown
 RefreshDropdown()
+
