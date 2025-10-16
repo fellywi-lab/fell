@@ -1,52 +1,232 @@
-local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+-- 🧩 Load Rayfield UI
+local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
 
+-------------------------------------------------
+-- ⚙️ Window Setup
+-------------------------------------------------
 local Window = Rayfield:CreateWindow({
-   Name = "Coba Coba Hub",
-   Icon = 0, -- Icon in Topbar. Can use Lucide Icons (string) or Roblox Image (number). 0 to use no icon (default).
-   LoadingTitle = "Coba Coba Hub",
-   LoadingSubtitle = "by Fell",
-   ShowText = "Rayfield", -- for mobile users to unhide rayfield, change if you'd like
-   Theme = "Default", -- Check https://docs.sirius.menu/rayfield/configuration/themes
+	Name = "Coba Coba Hub",
+	LoadingTitle = "Coba Coba Hub",
+	LoadingSubtitle = "by Fell",
+	Theme = "Default",
+	ToggleUIKeybind = Enum.KeyCode.K,
 
-   ToggleUIKeybind = "K", -- The keybind to toggle the UI visibility (string like "K" or Enum.KeyCode)
-
-   DisableRayfieldPrompts = false,
-   DisableBuildWarnings = false, -- Prevents Rayfield from warning when the script has a version mismatch with the interface
-
-   ConfigurationSaving = {
-      Enabled = true,
-      FolderName = nil, -- Create a custom folder for your hub/game
-      FileName = "Big Hub"
-   },
-
-   Discord = {
-      Enabled = true, -- Prompt the user to join your Discord server if their executor supports it
-      Invite = "https://discord.gg/Am3HvspbV6", -- The Discord invite code, do not include discord.gg/. E.g. discord.gg/ ABCD would be ABCD
-      RememberJoins = true -- Set this to false to make them join the discord every time they load it up
-   },
-
-   KeySystem = false, -- Set this to true to use our key system
-   KeySettings = {
-      Title = "Untitled",
-      Subtitle = "Key System",
-      Note = "No method of obtaining the key is provided", -- Use this to tell the user how to get a key
-      FileName = "Key", -- It is recommended to use something unique as other scripts using Rayfield may overwrite your key file
-      SaveKey = true, -- The user's key will be saved, but if you change the key, they will be unable to use your script
-      GrabKeyFromSite = false, -- If this is true, set Key below to the RAW site you would like Rayfield to get the key from
-      Key = {"Hello"} -- List of keys that will be accepted by the system, can be RAW file links (pastebin, github etc) or simple strings ("hello","key22")
-   }
+	ConfigurationSaving = {
+		Enabled = true,
+		FolderName = "CobaCobaHub",
+		FileName = "HubConfig"
+	}
 })
 
-local PlayerTab = Window:CreateTab("Player", 4483362458) -- Title, Image
+-------------------------------------------------
+-- 🧍 PLAYER TAB
+-------------------------------------------------
+local PlayerTab = Window:CreateTab("Player", 4483362458)
 
-local Slider = PlayerTab:CreateSlider({
-   Name = "WalkSpeed",
-   Range = {10, 100},
-   Increment = 1,
-   Suffix = "Speed",
-   CurrentValue = 10,
-   Flag = "Slider1", -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
-   Callback = function(Value)
-   game.Player.LocalPlayer.Character:SetAttribute("SpeedMultiplier", Value)
-   end,
+local SpeedValue = 16
+local SpeedEnabled = false
+local SmoothFactor = 10
+local velocity = Vector3.zero
+
+PlayerTab:CreateSlider({
+	Name = "WalkSpeed",
+	Range = {16, 300},
+	Increment = 1,
+	CurrentValue = SpeedValue,
+	Suffix = "Speed",
+	Flag = "SpeedSlider",
+	Callback = function(v)
+		SpeedValue = v
+	end
 })
+
+PlayerTab:CreateToggle({
+	Name = "Enable WalkSpeed",
+	CurrentValue = false,
+	Flag = "SpeedToggle",
+	Callback = function(v)
+		SpeedEnabled = v
+	end
+})
+
+local function GetChar()
+	local c = player.Character or player.CharacterAdded:Wait()
+	local hrp = c:WaitForChild("HumanoidRootPart", 3)
+	local hum = c:FindFirstChildOfClass("Humanoid")
+	return c, hrp, hum
+end
+
+RunService.RenderStepped:Connect(function(dt)
+	if not SpeedEnabled then return end
+	local c, hrp, hum = GetChar()
+	if not (c and hrp and hum) then return end
+
+	local dir = hum.MoveDirection
+	if dir.Magnitude > 0 then
+		velocity = velocity:Lerp(dir.Unit * SpeedValue, math.clamp(SmoothFactor * dt, 0, 1))
+	else
+		velocity = velocity:Lerp(Vector3.zero, math.clamp(SmoothFactor * dt * 1.5, 0, 1))
+	end
+
+	hrp.CFrame = hrp.CFrame + (velocity * dt)
+end)
+
+-------------------------------------------------
+-- 🌍 TELEPORT TAB (Sea 3 Full Library)
+-------------------------------------------------
+local TeleportTab = Window:CreateTab("Teleport", 6034287595)
+
+-- 📚 SEA 3 Island Library
+local Islands = {
+	["Castle on the Sea"] = Vector3.new(-5500, 313, -2800),
+	["Port Town"] = Vector3.new(-6100, 75, 1630),
+	["Hydra Island"] = Vector3.new(5200, 100, -3200),
+	["Great Tree"] = Vector3.new(2285, 25, -6400),
+	["Floating Turtle"] = Vector3.new(-12000, 340, -8700),
+	["Haunted Castle"] = Vector3.new(-9500, 140, 6100),
+	["Sea of Treats"] = Vector3.new(-12000, 110, 11000),
+	["Candy Land"] = Vector3.new(-11108, 100, 12094),
+	["Cake Land"] = Vector3.new(-10383, 100, 9978),
+	["Ice Cream Island"] = Vector3.new(-9250, 100, 10736),
+	["Peanut Island"] = Vector3.new(-12051, 100, 9565),
+	["Chocolate Island"] = Vector3.new(-12500, 100, 9112),
+	["Mansion"] = Vector3.new(-12450, 375, -8700),
+	["Tiki Outpost"] = Vector3.new(-16500, 400, -12000)
+}
+
+local CustomSpots = {}
+local SelectedLocation = nil
+local TweenMode = true
+
+-- 🌀 Tween Teleport
+local function TweenTeleport(pos)
+	local _, hrp = GetChar()
+	if not hrp then return end
+
+	local dist = (hrp.Position - pos).Magnitude
+	local tweenTime = math.clamp(dist / 300, 1, 10)
+	local tween = TweenService:Create(hrp, TweenInfo.new(tweenTime, Enum.EasingStyle.Linear), {CFrame = CFrame.new(pos)})
+	tween:Play()
+end
+
+-- ⚡ Instant Teleport
+local function InstantTeleport(pos)
+	local _, hrp = GetChar()
+	if hrp then
+		hrp.CFrame = CFrame.new(pos)
+	end
+end
+
+-- 📜 Dropdown
+local TeleportDropdown
+TeleportDropdown = TeleportTab:CreateDropdown({
+	Name = "Select Island (Sea 3)",
+	Options = {},
+	CurrentOption = "",
+	Flag = "TeleportDropdown",
+	Callback = function(opt)
+		SelectedLocation = opt
+	end
+})
+
+local function RefreshDropdown()
+	local allLocations = {}
+	for name, _ in pairs(Islands) do
+		table.insert(allLocations, name)
+	end
+	for name, _ in pairs(CustomSpots) do
+		table.insert(allLocations, name)
+	end
+	TeleportDropdown:SetOptions(allLocations)
+end
+
+-- 🧭 Tween / Instant Mode
+TeleportTab:CreateToggle({
+	Name = "Tween Mode (Smooth Travel)",
+	CurrentValue = TweenMode,
+	Callback = function(v)
+		TweenMode = v
+	end
+})
+
+-- 🚀 Teleport Button
+TeleportTab:CreateButton({
+	Name = "Teleport Now",
+	Callback = function()
+		if not SelectedLocation then
+			return Rayfield:Notify({
+				Title = "⚠️ Error",
+				Content = "Please select a location first!",
+				Duration = 3
+			})
+		end
+
+		local pos = Islands[SelectedLocation] or CustomSpots[SelectedLocation]
+		if pos then
+			Rayfield:Notify({
+				Title = "🌊 Teleporting",
+				Content = "Traveling to " .. SelectedLocation,
+				Duration = 3
+			})
+			if TweenMode then
+				TweenTeleport(pos)
+			else
+				InstantTeleport(pos)
+			end
+		else
+			Rayfield:Notify({
+				Title = "⚠️ Error",
+				Content = "Location not found!",
+				Duration = 3
+			})
+		end
+	end
+})
+
+-- ➕ Add Custom Location
+TeleportTab:CreateInput({
+	Name = "Add Custom Location (Name)",
+	PlaceholderText = "Example: MySpot",
+	RemoveTextAfterFocusLost = false,
+	Callback = function(name)
+		local _, hrp = GetChar()
+		if not hrp or name == "" then return end
+		CustomSpots[name] = hrp.Position
+		RefreshDropdown()
+		Rayfield:Notify({
+			Title = "✅ Saved",
+			Content = "Added custom spot: " .. name,
+			Duration = 3
+		})
+	end
+})
+
+-- ❌ Delete Custom Location
+TeleportTab:CreateButton({
+	Name = "Delete Selected Location",
+	Callback = function()
+		if CustomSpots[SelectedLocation] then
+			CustomSpots[SelectedLocation] = nil
+			RefreshDropdown()
+			Rayfield:Notify({
+				Title = "🗑️ Deleted",
+				Content = "Removed custom spot: " .. SelectedLocation,
+				Duration = 3
+			})
+		else
+			Rayfield:Notify({
+				Title = "⚠️ Error",
+				Content = "Only custom spots can be deleted!",
+				Duration = 3
+			})
+		end
+	end
+})
+
+-- 🔄 Load Dropdown
+RefreshDropdown()
+
