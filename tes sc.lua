@@ -25,61 +25,58 @@ local Window = Rayfield:CreateWindow({
 
 local PlayerTab = Window:CreateTab("Main", 4483362458)
 
--- Services
-local Players = game:GetService("Players")
-local Workspace = game:GetService("Workspace")
-local RunService = game:GetService("RunService")
+local AutoFishingEnabled = false
+local FishingDelay = 0.5
+local HookName = "Hook"
+local FishFolderName = "Fishes"
 
-local player = Players.LocalPlayer
+PlayerTab:CreateToggle({
+	Name = "Auto Fishing",
+	CurrentValue = false,
+	Flag = "AutoFishToggle",
+	Callback = function(v)
+		AutoFishingEnabled = v
+	end
+})
 
--- Settings
-local AutoFishingEnabled = true
-local FishingDelay = 1 -- delay per cast
-
--- Fungsi untuk mendapatkan pancing/rod
 local function GetRod()
-    for _, tool in pairs(player.Backpack:GetChildren()) do
-        if tool.Name:lower():find("rod") then
-            return tool
-        end
-    end
-    -- juga cek jika sudah equip
-    for _, tool in pairs(player.Character:GetChildren()) do
-        if tool:IsA("Tool") and tool.Name:lower():find("rod") then
-            return tool
-        end
-    end
-    return nil
+	for _, tool in pairs(player.Backpack:GetChildren()) do
+		if tool:IsA("Tool") and tool.Name:lower():find("rod") then return tool end
+	end
+	for _, tool in pairs(player.Character:GetChildren()) do
+		if tool:IsA("Tool") and tool.Name:lower():find("rod") then return tool end
+	end
+	return nil
 end
 
--- Fungsi auto cast & catch
+local function CastRod()
+	local rod = GetRod()
+	if rod then
+		if rod.Parent ~= player.Character then rod.Parent = player.Character end
+		rod:Activate()
+	end
+end
+
+local function CheckFishNearHook()
+	local hook = Workspace:FindFirstChild(HookName)
+	local fishFolder = Workspace:FindFirstChild(FishFolderName)
+	if not hook or not fishFolder then return nil end
+
+	for _, fish in pairs(fishFolder:GetChildren()) do
+		local pos = fish:IsA("Model") and fish:FindFirstChild("HumanoidRootPart") or fish:FindFirstChild("Position")
+		if pos then
+			local dist = (pos.Position - hook.Position).Magnitude
+			if dist < 5 then return fish end
+		end
+	end
+	return nil
+end
+
 local function AutoFish()
-    if not AutoFishingEnabled then return end
-
-    local rod = GetRod()
-    if not rod then return end
-
-    -- Equip rod jika belum
-    if not rod.Parent:IsA("Model") then
-        rod.Parent = player.Character
-    end
-
-    -- Trigger fishing (contoh, tergantung mekanik game)
-    if rod:FindFirstChild("Handle") then
-        local clickEvent = rod:FindFirstChild("Activate") or rod:FindFirstChildWhichIsA("RemoteEvent")
-        if clickEvent then
-            clickEvent:FireServer() -- kirim trigger catch
-        end
-    end
+	if not AutoFishingEnabled then return end
+	local fish = CheckFishNearHook()
+	if fish then CastRod() else CastRod() end
 end
-
--- Loop auto fishing
-RunService.RenderStepped:Connect(function()
-    if AutoFishingEnabled then
-        AutoFish()
-        wait(FishingDelay)
-    end
-end)
 
 -------------------------------------------------
 -- 🧍 PLAYER TAB
@@ -232,4 +229,5 @@ local PlayerTab = Window:CreateTab("MISC", 4483362458)
 
 -- 🔄 Load Dropdown
 RefreshDropdown()
+
 
