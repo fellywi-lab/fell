@@ -103,5 +103,65 @@ RunService.RenderStepped:Connect(function(dt)
 	end
 end)
 
+-------------------------------------------------
+-- 👁️ PLAYER ESP
+-------------------------------------------------
+local ESPEnabled = false
+local ESPFolder = Instance.new("Folder")
+ESPFolder.Name = "ESPFolder"
+ESPFolder.Parent = Workspace
+
+-- Toggle ESP
+PlayerTab:CreateToggle({
+	Name = "Player ESP",
+	CurrentValue = false,
+	Flag = "ESPToggle",
+	Callback = function(v)
+		ESPEnabled = v
+		if not ESPEnabled then
+			for _, obj in pairs(ESPFolder:GetChildren()) do
+				obj:Destroy()
+			end
+		end
+	end
+})
+
+-- Fungsi buat ESP
+local function CreateESP(plr)
+	if not plr.Character or not plr.Character:FindFirstChild("HumanoidRootPart") then return end
+	if ESPFolder:FindFirstChild(plr.Name) then return end
+	
+	local billboard = Instance.new("BillboardGui")
+	billboard.Name = plr.Name
+	billboard.Size = UDim2.new(0, 100, 0, 50)
+	billboard.Adornee = plr.Character.HumanoidRootPart
+	billboard.AlwaysOnTop = true
+	billboard.Parent = ESPFolder
+	
+	local label = Instance.new("TextLabel")
+	label.Size = UDim2.new(1,0,1,0)
+	label.BackgroundTransparency = 1
+	label.TextColor3 = Color3.fromRGB(255,255,0)
+	label.TextStrokeTransparency = 0
+	label.Font = Enum.Font.SourceSansBold
+	label.TextScaled = true
+	label.Parent = billboard
+end
+
+-- Update ESP setiap frame
+RunService.RenderStepped:Connect(function()
+	if ESPEnabled then
+		for _, plr in pairs(Players:GetPlayers()) do
+			if plr ~= player then
+				CreateESP(plr)
+				local esp = ESPFolder:FindFirstChild(plr.Name)
+				if esp and esp:FindFirstChildOfClass("TextLabel") then
+					esp.TextLabel.Text = plr.Name
+				end
+			end
+		end
+	end
+end)
+
 -- 🔄 Load Dropdown
 RefreshDropdown()
