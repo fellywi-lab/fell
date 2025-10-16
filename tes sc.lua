@@ -1,6 +1,5 @@
 -- 🧩 Load Rayfield UI
-local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
-
+loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
 local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
@@ -271,3 +270,4 @@ TeleportTab:CreateButton({
 
 -- 🔄 Load Dropdown
 RefreshDropdown()
+
