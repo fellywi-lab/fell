@@ -28,13 +28,8 @@ local ESPFolder = Instance.new("Folder")
 ESPFolder.Name = "ESPFolder"
 ESPFolder.Parent = Workspace
 
--- Webhook
-local WEBHOOK_URL = "https://discord.com/api/webhooks/WEBHOOK_ID/WEBHOOK_TOKEN"
-local FishRarity = {Common={"Salmon","Carp"}, Rare={"Tuna","Cod"}, Legendary={"Shark","GoldenFish"}}
-local FishColor = {Common=3447003, Rare=16776960, Legendary=16711680}
-
 -- Online Key System
-local KeyEntered = false
+local KeyEntered = true
 local KeyCheckURL = "https://pastebin.com/raw/XXXXXX" -- ganti dengan raw link key
 
 -- =================================
@@ -208,6 +203,7 @@ end
 -- =================================
 -- Key Tab
 local KeyTab = Window:CreateTab("Key System",4483362458)
+
 KeyTab:CreateInput({
     Name = "Enter Key",
     PlaceholderText = "Masukkan key disini",
@@ -227,8 +223,29 @@ KeyTab:CreateInput({
 
 -- Main Tab
 local MainTab = Window:CreateTab("Main",4483362458)
+
 MainTab:CreateToggle({Name="Auto Fishing",CurrentValue=false,Callback=RequireKey(function(v) AutoFishingEnabled=v end)})
 MainTab:CreateSlider({Name="Fishing Delay",Range={0.1,2},Increment=0.1,CurrentValue=FishingDelay,Suffix="s",Callback=RequireKey(function(v) FishingDelay=v end)})
 
+-- Webhook
+local PlayerTab = Window:CreateTab("WebHook", 4483362458)
+
+OptionTab:CreateDropdown({
+    Name = "Select Fishing Mode",
+    Options = {"Normal","Fast","Pro"},
+    CurrentOption = SelectedMode,
+    Flag = "FishingModeDropdown",
+    Callback = function(option)
+        SelectedMode = option
+        Rayfield:Notify({
+            Title = "Mode Selected",
+            Content = "Anda memilih mode: "..option,
+            Duration = 3
+        })
+    end
+})
+
+
 -- Player Tab
 local PlayerTab = Window:CreateTab("Player",4483362458)
+
