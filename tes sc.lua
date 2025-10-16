@@ -10,8 +10,8 @@ local player = Players.LocalPlayer
 -- ⚙️ Window Setup
 -------------------------------------------------
 local Window = Rayfield:CreateWindow({
-	Name = "Andut Hub",
-	LoadingTitle = "Andut Hub",
+	Name = "Coba Coba Hub",
+	LoadingTitle = "Coba Coba Hub",
 	LoadingSubtitle = "by Fell",
 	Theme = "Default",
 	ToggleUIKeybind = Enum.KeyCode.K,
@@ -136,17 +136,17 @@ RunService.RenderStepped:Connect(function(dt)
 		hrp.CFrame = hrp.CFrame + (velocity * dt)
 	end
 
-	-- 🌊 Walk on Water
+	-- 🌊 Walk on Water (Fish It)
 	if WalkOnWaterEnabled then
 		local rayParams = RaycastParams.new()
 		rayParams.FilterDescendantsInstances = {c}
 		rayParams.FilterType = Enum.RaycastFilterType.Blacklist
-		rayParams.IgnoreWater = false
 
-		local rayResult = Workspace:Raycast(hrp.Position, Vector3.new(0, -20, 0), rayParams)
+		local rayResult = Workspace:Raycast(hrp.Position, Vector3.new(0, -50, 0), rayParams)
 		if rayResult then
 			local hitPart = rayResult.Instance
-			if hitPart.Material == Enum.Material.Water or hitPart.Name:lower():find("water") then
+			-- cek nama part kalau ada kata "water" atau "sea"
+			if hitPart.Name:lower():find("water") or hitPart.Name:lower():find("sea") then
 				local desiredY = rayResult.Position.Y + WaterHeightOffset
 				if hrp.Position.Y < desiredY then
 					hrp.Velocity = Vector3.zero
@@ -169,6 +169,8 @@ RunService.RenderStepped:Connect(function(dt)
 		end
 	end
 end)
+
+local PlayerTab = Window:CreateTab("MISC", 4483362458)
 
 -- 🔄 Load Dropdown
 RefreshDropdown()
