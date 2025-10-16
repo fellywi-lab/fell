@@ -371,6 +371,12 @@ local PlayerTab = Window:CreateTab("MISC", 4483362458)
 -- WebHook
 local PlayerTab = Window:CreateTab("WebHook", 4483362458)
 
+PlayerTab:CreateToggle({
+	Name = "WebHook Url",
+	CurrentValue = false,
+	Flag = "WebHookDiscord",
+	Callback = function(v) AutoFishingEnabled = v end
+})
 -- Services
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
@@ -545,6 +551,7 @@ print("[Fish It Hub] AutoFishing + Webhook aktif.")
 
 -- 🔄 Load Dropdown
 RefreshDropdown()
+
 
 
 
