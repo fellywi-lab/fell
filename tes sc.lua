@@ -107,7 +107,7 @@ local HomeTab = Window:CreateTab("MAIN", 4483362458)
 -------------------------------------------------
 -- 🧍 MISC
 -------------------------------------------------
-local HomeTab = Window:CreateTab("MISC", 4483362458)
+local PlayerTab = Window:CreateTab("Player", 4483362458)
 
 local ESPEnabled = false
 local ESPFolder = Instance.new("Folder")
@@ -197,6 +197,7 @@ Players.PlayerRemoving:Connect(function(plr)
 		esp:Destroy()
 	end
 end)
+
 
 
 
