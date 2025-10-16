@@ -29,12 +29,20 @@ local Window = Rayfield:CreateWindow({
 local PlayerTab = Window:CreateTab("DISCORD", 4483362458)
 
 -------------------------------------------------
--- 💜 DISCORD INVITE BUTTON (Stylish + Functional)
+-- 🏠 HOME TAB (with Discord Invite)
+-------------------------------------------------
+local HomeTab = Window:CreateTab("🏠 Home", 4483362458)
+
+HomeTab:CreateLabel("Selamat datang di Coba Coba Hub!")
+HomeTab:CreateLabel("⚡ Skrip ini dibuat oleh Fell")
+
+-------------------------------------------------
+-- 💜 DISCORD INVITE BUTTON (Premium Style)
 -------------------------------------------------
 local DiscordInviteLink = "https://discord.gg/YOURSERVERCODE" -- ganti dengan link server kamu
+local TweenService = game:GetService("TweenService")
 
--- Tombol dengan warna khas Discord
-local DiscordButton = PlayerTab:CreateButton({
+local DiscordButton = HomeTab:CreateButton({
 	Name = "💜 Join Discord Server",
 	Callback = function()
 		local success = false
@@ -56,8 +64,8 @@ local DiscordButton = PlayerTab:CreateButton({
 			setclipboard(DiscordInviteLink)
 			Rayfield:Notify({
 				Title = "Discord Invite",
-				Content = "📋 Link Discord disalin ke clipboard!\nTempel di browser untuk join server.",
-				Duration = 4,
+				Content = "📋 Link Discord telah disalin!\nTempel di browser untuk join server.",
+				Duration = 5,
 			})
 		else
 			Rayfield:Notify({
@@ -69,23 +77,35 @@ local DiscordButton = PlayerTab:CreateButton({
 	end
 })
 
--- 🌈 Efek animasi tambahan saat tombol diklik (opsional)
-local TweenService = game:GetService("TweenService")
-local ButtonFrame = DiscordButton.Instance or DiscordButton -- antisipasi versi Rayfield
-
+-- 🌈 Animasi tombol saat diklik
+local ButtonFrame = DiscordButton.Instance or DiscordButton
 if ButtonFrame and ButtonFrame:FindFirstChildOfClass("TextButton") then
 	local btn = ButtonFrame:FindFirstChildOfClass("TextButton")
+	btn.BackgroundColor3 = Color3.fromRGB(88, 101, 242) -- Warna ungu Discord
+	btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+	btn.Font = Enum.Font.SourceSansBold
+	btn.TextScaled = true
 
 	btn.MouseButton1Click:Connect(function()
-		local originalColor = btn.BackgroundColor3
-		local highlight = Color3.fromRGB(114, 137, 218) -- ungu khas Discord
-		local tweenIn = TweenService:Create(btn, TweenInfo.new(0.15), {BackgroundColor3 = highlight})
-		local tweenOut = TweenService:Create(btn, TweenInfo.new(0.4), {BackgroundColor3 = originalColor})
+		local tweenIn = TweenService:Create(btn, TweenInfo.new(0.15), {BackgroundColor3 = Color3.fromRGB(114, 137, 218)})
+		local tweenOut = TweenService:Create(btn, TweenInfo.new(0.4), {BackgroundColor3 = Color3.fromRGB(88, 101, 242)})
 		tweenIn:Play()
 		tweenIn.Completed:Wait()
 		tweenOut:Play()
 	end)
 end
+
+-------------------------------------------------
+-- ✨ DESAIN TAMBAHAN (opsional)
+-------------------------------------------------
+HomeTab:CreateParagraph({
+	Title = "✨ Tips:",
+	Content = [[
+🟡 Gunakan tombol di tab Player untuk mengatur kecepatan.
+🎣 Aktifkan Auto Fishing untuk mancing otomatis.
+👁️ Aktifkan ESP untuk melihat player lain.
+💜 Klik tombol di atas untuk masuk ke server Discord resmi kami!]]
+})
 
 -------------------------------------------------
 -- 🧍 MAIN
@@ -188,6 +208,7 @@ Players.PlayerRemoving:Connect(function(plr)
 		esp:Destroy()
 	end
 end)
+
 
 
 
