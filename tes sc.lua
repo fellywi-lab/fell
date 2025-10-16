@@ -37,64 +37,46 @@ local SpeedValue = 16
 local SpeedEnabled = false
 local SmoothFactor = 10 -- responsif tapi tetap halus
 
-local WalkSpeedSlider = PlayerTab:CreateSlider({
-    Name = "WalkSpeed",
-    Range = {16, 300},
-    Increment = 1,
-    Suffix = "Speed",
-    CurrentValue = SpeedValue,
-    Flag = "WalkSpeedSlider",
-    Callback = function(Value)
-        SpeedValue = Value
-    end
-})
-
-local WalkSpeedToggle = PlayerTab:CreateToggle({
-    Name = "Enable WalkSpeed",
-    CurrentValue = false,
-    Flag = "WalkSpeedToggle",
-    Callback = function(Value)
-        SpeedEnabled = Value
-    end
-})
-
-local function getCharParts()
-    local char = player.Character
-    if not char then return end
-    local root = char:FindFirstChild("HumanoidRootPart")
-    local humanoid = char:FindFirstChildOfClass("Humanoid")
-    if root and humanoid then
-        return char, root, humanoid
-    end
-end
-
+-------------------------------------------------
+-- 🚶‍♂️ WALK SPEED SYSTEM (Fix + Smooth)
+-------------------------------------------------
+local SpeedValue = 16
+local SpeedEnabled = false
+local SmoothFactor = 10
 local velocity = Vector3.zero
 
-RunService.RenderStepped:Connect(function(dt)
-    if not SpeedEnabled then
-        velocity = Vector3.zero
-        return
-    end
+-- 🔘 Slider: Speed Value
+local WalkSpeedSlider = PlayerTab:CreateSlider({
+	Name = "WalkSpeed",
+	Range = {16, 300},
+	Increment = 1,
+	Suffix = "Speed",
+	CurrentValue = SpeedValue,
+	Flag = "WalkSpeedSlider",
+	Callback = function(Value)
+		SpeedValue = Value
+	end
+})
 
-    local char, root, humanoid = getCharParts()
-    if not (char and root and humanoid) then return end
+-- 🔘 Toggle: Enable Speed
+local WalkSpeedToggle = PlayerTab:CreateToggle({
+	Name = "Enable WalkSpeed",
+	CurrentValue = false,
+	Flag = "WalkSpeedToggle",
+	Callback = function(Value)
+		SpeedEnabled = Value
+		Rayfield:Notify({
+			Title = "Walk Speed",
+			Content = Value and "✅ Aktif" or "❌ Nonaktif",
+			Duration = 2
+		})
+	end
+})
 
-    local moveDir = humanoid.MoveDirection
-    if moveDir.Magnitude > 0 then
-        local targetVelocity = moveDir.Unit * SpeedValue
-        velocity = velocity:Lerp(targetVelocity, math.clamp(SmoothFactor * dt, 0, 1))
-    else
-        velocity = velocity:Lerp(Vector3.zero, math.clamp(SmoothFactor * dt * 1.5, 0, 1))
-    end
-
-    root.CFrame = root.CFrame + (velocity * dt)
-end)
-
-player.CharacterAdded:Connect(function(char)
-    char:WaitForChild("HumanoidRootPart")
-    char:WaitForChild("Humanoid")
-    velocity = Vector3.zero
-end)
+-- 🔍 Fungsi ambil bagian karakter
+local function GetChar()
+	local char = player.Character or player.CharacterAdded:Wait()
+	local root = char:WaitFor
 
 -------------------------------------------------
 -- ♾️ INFINITE JUMP (Fixed)
@@ -235,3 +217,4 @@ Players.PlayerRemoving:Connect(function(plr)
 		esp:Destroy()
 	end
 end)
+
