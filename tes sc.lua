@@ -10,8 +10,8 @@ local player = Players.LocalPlayer
 -- ⚙️ Window Setup
 -------------------------------------------------
 local Window = Rayfield:CreateWindow({
-	Name = "Coba Coba Hub",
-	LoadingTitle = "Coba Coba Hub",
+	Name = "Andut Hub",
+	LoadingTitle = "Andut Hub",
 	LoadingSubtitle = "by Fell",
 	Theme = "Default",
 	ToggleUIKeybind = Enum.KeyCode.K,
@@ -66,52 +66,12 @@ PlayerTab:CreateToggle({
 	end
 })
 
-local function GetChar()
-	local c = player.Character or player.CharacterAdded:Wait()
-	local hrp = c:WaitForChild("HumanoidRootPart", 3)
-	local hum = c:FindFirstChildOfClass("Humanoid")
-	return c, hrp, hum
-end
-
--- 🌀 Movement
-RunService.RenderStepped:Connect(function(dt)
-	local c, hrp, hum = GetChar()
-	if not (c and hrp and hum) then return end
-
-	-- 🚶 Smooth Speed System
-	if SpeedEnabled then
-		local dir = hum.MoveDirection
-		if dir.Magnitude > 0 then
-			velocity = velocity:Lerp(dir.Unit * SpeedValue, math.clamp(SmoothFactor * dt, 0, 1))
-		else
-			velocity = velocity:Lerp(Vector3.zero, math.clamp(SmoothFactor * dt * 1.5, 0, 1))
-		end
-		hrp.CFrame = hrp.CFrame + (velocity * dt)
-	end
-
-	-- 🌊 Walk on Water System
-	if WalkOnWaterEnabled then
-		local ray = Ray.new(hrp.Position, Vector3.new(0, -10, 0))
-		local hit, pos = Workspace:FindPartOnRay(ray, c)
-		if hit and hit.Material == Enum.Material.Water then
-			local desiredY = pos.Y + WaterHeightOffset
-			if hrp.Position.Y < desiredY then
-				hrp.Velocity = Vector3.zero
-				hrp.CFrame = CFrame.new(hrp.Position.X, desiredY, hrp.Position.Z)
-			end
-		end
-	end
-end)
-
--------------------------------------------------
--- 👁️ PLAYER ESP
--------------------------------------------------
+-- 👁️ Player ESP Toggle
 local ESPEnabled = false
 local ESPFolder = Instance.new("Folder")
 ESPFolder.Name = "ESPFolder"
 ESPFolder.Parent = Workspace
 
--- Toggle ESP
 PlayerTab:CreateToggle({
 	Name = "Player ESP",
 	CurrentValue = false,
@@ -126,7 +86,17 @@ PlayerTab:CreateToggle({
 	end
 })
 
--- Fungsi buat ESP
+-------------------------------------------------
+-- 🛠️ Functions
+-------------------------------------------------
+local function GetChar()
+	local c = player.Character or player.CharacterAdded:Wait()
+	local hrp = c:WaitForChild("HumanoidRootPart", 3)
+	local hum = c:FindFirstChildOfClass("Humanoid")
+	return c, hrp, hum
+end
+
+-- ESP Creation
 local function CreateESP(plr)
 	if not plr.Character or not plr.Character:FindFirstChild("HumanoidRootPart") then return end
 	if ESPFolder:FindFirstChild(plr.Name) then return end
@@ -148,8 +118,45 @@ local function CreateESP(plr)
 	label.Parent = billboard
 end
 
--- Update ESP setiap frame
-RunService.RenderStepped:Connect(function()
+-------------------------------------------------
+-- 🔄 RenderStepped Loop
+-------------------------------------------------
+RunService.RenderStepped:Connect(function(dt)
+	local c, hrp, hum = GetChar()
+	if not (c and hrp and hum) then return end
+
+	-- 🚶 Smooth WalkSpeed
+	if SpeedEnabled then
+		local dir = hum.MoveDirection
+		if dir.Magnitude > 0 then
+			velocity = velocity:Lerp(dir.Unit * SpeedValue, math.clamp(SmoothFactor * dt, 0, 1))
+		else
+			velocity = velocity:Lerp(Vector3.zero, math.clamp(SmoothFactor * dt * 1.5, 0, 1))
+		end
+		hrp.CFrame = hrp.CFrame + (velocity * dt)
+	end
+
+	-- 🌊 Walk on Water
+	if WalkOnWaterEnabled then
+		local rayParams = RaycastParams.new()
+		rayParams.FilterDescendantsInstances = {c}
+		rayParams.FilterType = Enum.RaycastFilterType.Blacklist
+		rayParams.IgnoreWater = false
+
+		local rayResult = Workspace:Raycast(hrp.Position, Vector3.new(0, -20, 0), rayParams)
+		if rayResult then
+			local hitPart = rayResult.Instance
+			if hitPart.Material == Enum.Material.Water or hitPart.Name:lower():find("water") then
+				local desiredY = rayResult.Position.Y + WaterHeightOffset
+				if hrp.Position.Y < desiredY then
+					hrp.Velocity = Vector3.zero
+					hrp.CFrame = CFrame.new(hrp.Position.X, desiredY, hrp.Position.Z)
+				end
+			end
+		end
+	end
+
+	-- 👁️ Player ESP
 	if ESPEnabled then
 		for _, plr in pairs(Players:GetPlayers()) do
 			if plr ~= player then
