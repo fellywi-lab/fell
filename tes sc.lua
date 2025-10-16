@@ -51,3 +51,12 @@ PlayerTab:CreateSlider({
 		SpeedValue = v
 	end
 })
+
+PlayerTab:CreateToggle({
+	Name = "Enable WalkSpeed",
+	CurrentValue = false,
+	Flag = "SpeedToggle",
+	Callback = function(v)
+		SpeedEnabled = v
+	end
+})
