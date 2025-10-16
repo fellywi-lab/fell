@@ -367,8 +367,185 @@ end)
 
 local PlayerTab = Window:CreateTab("MISC", 4483362458)
 
+
+-- WebHook
+local PlayerTab = Window:CreateTab("WebHook", 4483362458)
+
+-- Services
+local HttpService = game:GetService("HttpService")
+local Players = game:GetService("Players")
+local Workspace = game:GetService("Workspace")
+local RunService = game:GetService("RunService")
+
+local player = Players.LocalPlayer
+
+-- Webhook URL
+local WEBHOOK_URL = "https://discord.com/api/webhooks/WEBHOOK_ID/WEBHOOK_TOKEN"
+
+-- Rarity Settings
+local FishRarity = {
+    Common = {"Salmon","Carp"},
+    Rare = {"Tuna","Cod"},
+    Legendary = {"Shark","GoldenFish"}
+}
+local FishColor = {
+    Common = 3447003,
+    Rare = 16776960,
+    Legendary = 16711680
+}
+
+-- ============================================
+-- WEBHOOK FUNCTION
+-- ============================================
+local function SendWebhookEmbed(title, description, color, footer)
+    local embedData = {
+        ["embeds"] = {{
+            ["title"] = title or "Fish It Hub Notification",
+            ["description"] = description or "",
+            ["color"] = color or 16777215,
+            ["footer"] = {["text"] = footer or "Fish It Hub"},
+            ["timestamp"] = os.date("!%Y-%m-%dT%H:%M:%SZ")
+        }}
+    }
+    local jsonData = HttpService:JSONEncode(embedData)
+    local success, err = pcall(function()
+        HttpService:PostAsync(WEBHOOK_URL, jsonData, Enum.HttpContentType.ApplicationJson)
+    end)
+    if not success then warn("Gagal kirim webhook: "..tostring(err)) end
+end
+
+local function GetFishRarity(fishName)
+    for rarity, names in pairs(FishRarity) do
+        if table.find(names, fishName) then return rarity end
+    end
+    return "Common"
+end
+
+local function OnFishCaught(fish)
+    if not fish then return end
+    local fishName = fish.Name or "Unknown Fish"
+    local playerName = player.Name
+    local rarity = GetFishRarity(fishName)
+    local color = FishColor[rarity] or 16777215
+
+    local hookPos = Workspace:FindFirstChild("Hook") and Workspace.Hook.Position or Vector3.new(0,0,0)
+    local rodLevel = "N/A"
+    local rod = nil
+    for _, tool in pairs(player.Character:GetChildren()) do
+        if tool:IsA("Tool") and tool.Name:lower():find("rod") then rod = tool break end
+    end
+    if rod and rod:FindFirstChild("Level") then
+        rodLevel = rod.Level.Value
+    end
+
+    local description = "**Player:** "..playerName.."\n"..
+                        "**Fish:** "..fishName.."\n"..
+                        "**Rarity:** "..rarity.."\n"..
+                        "**Rod Level:** "..rodLevel.."\n"..
+                        string.format("**Hook Pos:** %.1f, %.1f, %.1f", hookPos.X, hookPos.Y, hookPos.Z)
+
+    SendWebhookEmbed("🎣 Fish Caught!", description, color, "Fish It Hub")
+end
+
+-- ============================================
+-- AUTO FISHING WITH WEBHOOK
+-- ============================================
+local AutoFishingEnabled = true
+local FishingDelay = 0.5
+local AutoFishDebounce = false
+
+local function GetRod()
+    for _, tool in pairs(player.Character:GetChildren()) do
+        if tool:IsA("Tool") and tool.Name:lower():find("rod") then return tool end
+    end
+    for _, tool in pairs(player.Backpack:GetChildren()) do
+        if tool:IsA("Tool") and tool.Name:lower():find("rod") then return tool end
+    end
+    return nil
+end
+
+local function FindHook()
+    local hook = Workspace:FindFirstChild("Hook") -- ganti sesuai nama hook di game
+    return hook
+end
+
+local function FindFishNearHook(hook, maxDistance)
+    if not hook then return nil end
+    maxDistance = maxDistance or 6
+    for _, fishFolderName in pairs({"Fishes","FishFolder","Fishies"}) do
+        local fishFolder = Workspace:FindFirstChild(fishFolderName)
+        if fishFolder then
+            for _, fish in pairs(fishFolder:GetChildren()) do
+                local posPart = fish:IsA("Model") and fish:FindFirstChild("HumanoidRootPart") or fish:FindFirstChildWhichIsA("BasePart")
+                if posPart and (posPart.Position - hook.Position).Magnitude <= maxDistance then
+                    return fish
+                end
+            end
+        end
+    end
+    return nil
+end
+
+local function EquipRod(rod)
+    if not rod then return false end
+    if rod.Parent ~= player.Character then rod.Parent = player.Character end
+    wait(0.05)
+    return true
+end
+
+local function UseRod(rod)
+    if not rod then return false end
+    if typeof(rod.Activate) == "function" then
+        rod:Activate()
+        return true
+    end
+    return false
+end
+
+local function AutoFishTick()
+    if not AutoFishingEnabled then return end
+    if AutoFishDebounce then return end
+    AutoFishDebounce = true
+
+    local rod = GetRod()
+    if not rod then AutoFishDebounce = false return end
+    EquipRod(rod)
+
+    local hook = FindHook()
+    if not hook then
+        UseRod(rod) -- cast jika hook belum ada
+        wait(FishingDelay)
+        AutoFishDebounce = false
+        return
+    end
+
+    local fish = FindFishNearHook(hook, 6)
+    if fish then
+        UseRod(rod)
+        OnFishCaught(fish) -- kirim webhook otomatis
+    else
+        UseRod(rod) -- cast ulang jika tidak ada ikan
+    end
+
+    wait(FishingDelay)
+    AutoFishDebounce = false
+end
+
+-- ============================================
+-- MAIN LOOP
+-- ============================================
+RunService.Heartbeat:Connect(function()
+    if AutoFishingEnabled then
+        spawn(AutoFishTick)
+    end
+end)
+
+print("[Fish It Hub] AutoFishing + Webhook aktif.")
+
+
 -- 🔄 Load Dropdown
 RefreshDropdown()
+
 
 
 
