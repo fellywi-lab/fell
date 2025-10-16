@@ -26,56 +26,196 @@ local Window = Rayfield:CreateWindow({
 local PlayerTab = Window:CreateTab("Main", 4483362458)
 
 local AutoFishingEnabled = false
-local FishingDelay = 0.5
-local HookName = "Hook"
-local FishFolderName = "Fishes"
+local FishingDelay = 0.4 -- delay between checks
+local HookNameCandidates = {"Hook", "Bobber", "FishingHook", "HookPart"} -- common names
+local FishFolderCandidates = {"Fishes", "FishFolder", "Fishies", "Fish"} -- possible folders
+local RodNameKeyword = "rod" -- cari tool yang namanya mengandung ini
+local AutoUseRod = true -- gunakan Tool:Activate() ketika kondisi terpenuhi
+local CastOnEmpty = true -- cast otomatis jika hook tidak ada/rusak
 
 PlayerTab:CreateToggle({
 	Name = "Auto Fishing",
 	CurrentValue = false,
 	Flag = "AutoFishToggle",
-	Callback = function(v)
-		AutoFishingEnabled = v
-	end
+	Callback = function(v) AutoFishingEnabled = v end
 })
 
+PlayerTab:CreateSlider({
+	Name = "Fishing Delay",
+	Range = {0.1, 2},
+	Increment = 0.1,
+	CurrentValue = FishingDelay,
+	Suffix = "s",
+	Flag = "FishingDelay",
+	Callback = function(v) FishingDelay = v end
+})
+
+-- helper: cari rod/tool
 local function GetRod()
-	for _, tool in pairs(player.Backpack:GetChildren()) do
-		if tool:IsA("Tool") and tool.Name:lower():find("rod") then return tool end
+	-- prioritas: equipped -> backpack
+	local char = player.Character
+	if char then
+		for _, obj in pairs(char:GetChildren()) do
+			if obj:IsA("Tool") and obj.Name:lower():find(RodNameKeyword) then
+				return obj
+			end
+		end
 	end
-	for _, tool in pairs(player.Character:GetChildren()) do
-		if tool:IsA("Tool") and tool.Name:lower():find("rod") then return tool end
+	for _, obj in pairs(player.Backpack:GetChildren()) do
+		if obj:IsA("Tool") and obj.Name:lower():find(RodNameKeyword) then
+			return obj
+		end
 	end
-	return nil
-end
-
-local function CastRod()
-	local rod = GetRod()
-	if rod then
-		if rod.Parent ~= player.Character then rod.Parent = player.Character end
-		rod:Activate()
-	end
-end
-
-local function CheckFishNearHook()
-	local hook = Workspace:FindFirstChild(HookName)
-	local fishFolder = Workspace:FindFirstChild(FishFolderName)
-	if not hook or not fishFolder then return nil end
-
-	for _, fish in pairs(fishFolder:GetChildren()) do
-		local pos = fish:IsA("Model") and fish:FindFirstChild("HumanoidRootPart") or fish:FindFirstChild("Position")
-		if pos then
-			local dist = (pos.Position - hook.Position).Magnitude
-			if dist < 5 then return fish end
+	-- fallback: cari tool apa saja yang kelihatan seperti pancing
+	for _, obj in pairs(player.Backpack:GetChildren()) do
+		if obj:IsA("Tool") and (obj.Name:lower():find("fishing") or obj.Name:lower():find("rod") or obj.Name:lower():find("pole")) then
+			return obj
 		end
 	end
 	return nil
 end
 
-local function AutoFish()
+-- helper: cari hook di workspace
+local function FindHook()
+	-- coba nama-nama kandidat
+	for _, name in ipairs(HookNameCandidates) do
+		local h = Workspace:FindFirstChild(name, true)
+		if h then return h end
+	end
+	-- fallback: cari object dengan tag/part kecil bernama "Bobber" / "hook"
+	for _, descendant in pairs(Workspace:GetDescendants()) do
+		if descendant:IsA("BasePart") then
+			local ln = descendant.Name:lower()
+			if ln:find("bob") or ln:find("hook") or ln:find("bobber") then
+				return descendant
+			end
+		end
+	end
+	return nil
+end
+
+-- helper: cari folder ikan (opsional)
+local function FindFishFolder()
+	for _, name in ipairs(FishFolderCandidates) do
+		local f = Workspace:FindFirstChild(name)
+		if f and f:IsA("Folder") then return f end
+	end
+	-- fallback: cari folder-model besar yang berisi banyak part/ikan
+	for _, child in pairs(Workspace:GetChildren()) do
+		if child:IsA("Folder") and #child:GetChildren() > 3 then
+			return child
+		end
+	end
+	return nil
+end
+
+-- helper: cek ikan dekat hook
+local function IsFishNearHook(hook, maxDistance)
+	if not hook then return false end
+	local fishFolder = FindFishFolder()
+	maxDistance = maxDistance or 6
+	if fishFolder then
+		for _, fish in pairs(fishFolder:GetChildren()) do
+			local posPart = nil
+			if fish:IsA("Model") then
+				posPart = fish:FindFirstChild("HumanoidRootPart") or fish:FindFirstChildWhichIsA("BasePart")
+			else
+				posPart = fish:IsA("BasePart") and fish or fish:FindFirstChildWhichIsA("BasePart")
+			end
+			if posPart and posPart.Position and hook.Position then
+				if (posPart.Position - hook.Position).Magnitude <= maxDistance then
+					return true, fish
+				end
+			end
+		end
+	end
+	-- tambahan: cek sekitar hook ada part yang gerak/kecil (beberapa ikan adalah part)
+	for _, d in pairs(Workspace:GetDescendants()) do
+		if d:IsA("BasePart") and d ~= hook then
+			local name = d.Name:lower()
+			if (name:find("fish") or name:find("salmon") or name:find("tuna") or name:find("shark")) and (d.Position - hook.Position).Magnitude <= maxDistance then
+				return true, d
+			end
+		end
+	end
+	return false, nil
+end
+
+-- equip rod safely
+local function EquipRod(rod)
+	if not rod then return false end
+	if rod.Parent ~= player.Character then
+		rod.Parent = player.Character
+	end
+	-- small wait to ensure equip
+	wait(0.05)
+	return true
+end
+
+-- try to cast or use rod
+local function UseRodOnce(rod)
+	if not rod then return false end
+	-- prefer :Activate() if available
+	local succ, err = pcall(function()
+		if rod.Parent ~= player.Character then rod.Parent = player.Character end
+		-- some tools expect :Activate(); others use RemoteEvents (not handled here)
+		if typeof(rod.Activate) == "function" then
+			rod:Activate()
+		elseif rod:FindFirstChildWhichIsA("RemoteEvent") then
+			-- DO NOT auto-fire remotes generically. This is a safe placeholder.
+			-- If you know remote name & args, we can add it explicitly (with risk).
+		end
+	end)
+	return succ
+end
+
+-- main auto-fishing routine (client-side)
+local AutoFishDebounce = false
+local function AutoFishTick()
 	if not AutoFishingEnabled then return end
-	local fish = CheckFishNearHook()
-	if fish then CastRod() else CastRod() end
+	if AutoFishDebounce then return end
+	AutoFishDebounce = true
+
+	local rod = GetRod()
+	if not rod then
+		AutoFishDebounce = false
+		return
+	end
+
+	-- find hook (bobber)
+	local hook = FindHook()
+
+	-- if no hook found, cast if allowed
+	if not hook and CastOnEmpty then
+		EquipRod(rod)
+		UseRodOnce(rod)
+		wait(0.25)
+		AutoFishDebounce = false
+		return
+	end
+
+	-- if hook exists: check fish near hook
+	local near, fish = IsFishNearHook(hook, 6)
+	if near then
+		-- equip + try to reel / activate quickly to catch
+		EquipRod(rod)
+		UseRodOnce(rod)
+		-- small wait to allow server to process
+		wait(0.15)
+	else
+		-- not near: ensure rod is cast (if rod is not cast, cast)
+		-- heuristic: if player's tool handle is not far from hook, skip
+		EquipRod(rod)
+		-- If hook is present but no fish near, we may retry cast to reposition
+		if CastOnEmpty then
+			UseRodOnce(rod)
+			wait(0.25)
+		end
+	end
+
+	-- cooldown
+	wait(FishingDelay)
+	AutoFishDebounce = false
 end
 
 -------------------------------------------------
@@ -229,5 +369,6 @@ local PlayerTab = Window:CreateTab("MISC", 4483362458)
 
 -- 🔄 Load Dropdown
 RefreshDropdown()
+
 
 
