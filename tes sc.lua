@@ -97,29 +97,49 @@ player.CharacterAdded:Connect(function(char)
 end)
 
 -------------------------------------------------
--- ♾️ INFINITE JUMP FEATURE
+-- ♾️ INFINITE JUMP (Fixed)
 -------------------------------------------------
+local UserInputService = game:GetService("UserInputService")
 local InfiniteJumpEnabled = false
+local canJump = true
 
--- Tambahkan ke tab Player
+-- 🧩 Tambahkan Toggle di Tab Player
 PlayerTab:CreateToggle({
 	Name = "Infinite Jump",
 	CurrentValue = false,
 	Flag = "InfiniteJumpToggle",
 	Callback = function(v)
 		InfiniteJumpEnabled = v
+		Rayfield:Notify({
+			Title = "Infinite Jump",
+			Content = v and "✅ Aktif" or "❌ Nonaktif",
+			Duration = 2
+		})
 	end
 })
 
--- Deteksi saat tombol spasi ditekan
-local UserInputService = game:GetService("UserInputService")
-
+-- 🌀 Sistem lompat tanpa batas
 UserInputService.JumpRequest:Connect(function()
-	if InfiniteJumpEnabled then
-		local character = player.Character
-		if character and character:FindFirstChildOfClass("Humanoid") then
-			character:FindFirstChildOfClass("Humanoid"):ChangeState(Enum.HumanoidStateType.Jumping)
+	if InfiniteJumpEnabled and canJump then
+		canJump = false
+		local character = player.Character or player.CharacterAdded:Wait()
+		local humanoid = character:FindFirstChildOfClass("Humanoid")
+		if humanoid then
+			humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+			task.wait(0.05) -- delay kecil agar tidak spam error
+			humanoid:ChangeState(Enum.HumanoidStateType.Seated) -- trik supaya bisa lompat terus
+			task.wait(0.05)
+			humanoid:ChangeState(Enum.HumanoidStateType.Freefall)
 		end
+		canJump = true
 	end
 end)
 
+-- 🔁 Pastikan tetap aktif setelah respawn
+player.CharacterAdded:Connect(function(char)
+	task.wait(1)
+	if InfiniteJumpEnabled then
+		local hum = char:WaitForChild("Humanoid")
+		hum:ChangeState(Enum.HumanoidStateType.Freefall)
+	end
+end)
