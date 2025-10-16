@@ -1,5 +1,6 @@
 -- 🧩 Load Rayfield UI
-loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
+local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
+
 local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
@@ -211,5 +212,62 @@ TeleportTab:CreateButton({
 			Rayfield:Notify({
 				Title = "🌊 Teleporting",
 				Content = "Traveling to " .. SelectedLocation,
-				Duration
+				Duration = 3
+			})
+			if TweenMode then
+				TweenTeleport(pos)
+			else
+				InstantTeleport(pos)
+			end
+		else
+			Rayfield:Notify({
+				Title = "⚠️ Error",
+				Content = "Location not found!",
+				Duration = 3
+			})
+		end
+	end
+})
 
+-- ➕ Add Custom Location
+TeleportTab:CreateInput({
+	Name = "Add Custom Location (Name)",
+	PlaceholderText = "Example: MySpot",
+	RemoveTextAfterFocusLost = false,
+	Callback = function(name)
+		local _, hrp = GetChar()
+		if not hrp or name == "" then return end
+		CustomSpots[name] = hrp.Position
+		RefreshDropdown()
+		Rayfield:Notify({
+			Title = "✅ Saved",
+			Content = "Added custom spot: " .. name,
+			Duration = 3
+		})
+	end
+})
+
+-- ❌ Delete Custom Location
+TeleportTab:CreateButton({
+	Name = "Delete Selected Location",
+	Callback = function()
+		if CustomSpots[SelectedLocation] then
+			CustomSpots[SelectedLocation] = nil
+			RefreshDropdown()
+			Rayfield:Notify({
+				Title = "🗑️ Deleted",
+				Content = "Removed custom spot: " .. SelectedLocation,
+				Duration = 3
+			})
+		else
+			Rayfield:Notify({
+				Title = "⚠️ Error",
+				Content = "Only custom spots can be deleted!",
+				Duration = 3
+			})
+		end
+	end
+})
+
+-- 🔄 Load Dropdown
+RefreshDropdown()
