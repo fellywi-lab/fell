@@ -1,5 +1,13 @@
 -- 🧩 Load Rayfield UI
-loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
+local s, e = pcall(function()
+    loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
+end)
+if not s then
+    warn("⚠️ Failed to load Rayfield UI:", e)
+    return
+end
+
+-- 📦 Services
 local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
@@ -7,7 +15,7 @@ local Workspace = game:GetService("Workspace")
 local player = Players.LocalPlayer
 
 -------------------------------------------------
--- ⚙️ Window Setup
+-- ⚙️ WINDOW SETUP
 -------------------------------------------------
 local Window = Rayfield:CreateWindow({
 	Name = "Coba Coba Hub",
@@ -15,7 +23,6 @@ local Window = Rayfield:CreateWindow({
 	LoadingSubtitle = "by Fell",
 	Theme = "Default",
 	ToggleUIKeybind = Enum.KeyCode.K,
-
 	ConfigurationSaving = {
 		Enabled = true,
 		FolderName = "CobaCobaHub",
@@ -34,7 +41,17 @@ local WalkOnWaterEnabled = false
 local SmoothFactor = 10
 local velocity = Vector3.zero
 
--- 🔧 Slider untuk speed
+-- 🧭 Helper
+local function GetChar()
+	local c = player.Character or player.CharacterAdded:Wait()
+	local hrp = c:FindFirstChild("HumanoidRootPart")
+	local hum = c:FindFirstChildOfClass("Humanoid")
+	return c, hrp, hum
+end
+
+-------------------------------------------------
+-- 🏃‍♂️ SPEED SETTINGS
+-------------------------------------------------
 PlayerTab:CreateSlider({
 	Name = "WalkSpeed",
 	Range = {16, 300},
@@ -47,7 +64,6 @@ PlayerTab:CreateSlider({
 	end
 })
 
--- 🔘 Toggle speed
 PlayerTab:CreateToggle({
 	Name = "Enable WalkSpeed",
 	CurrentValue = false,
@@ -57,7 +73,6 @@ PlayerTab:CreateToggle({
 	end
 })
 
--- 🌊 Toggle Walk on Water
 PlayerTab:CreateToggle({
 	Name = "Walk on Water",
 	CurrentValue = false,
@@ -67,16 +82,8 @@ PlayerTab:CreateToggle({
 	end
 })
 
--- 🧍 Fungsi bantu
-local function GetChar()
-	local c = player.Character or player.CharacterAdded:Wait()
-	local hrp = c:WaitForChild("HumanoidRootPart", 3)
-	local hum = c:FindFirstChildOfClass("Humanoid")
-	return c, hrp, hum
-end
-
 -------------------------------------------------
--- 🏃‍♂️ Speed Handler
+-- 🧍‍♂️ SPEED HANDLER
 -------------------------------------------------
 RunService.RenderStepped:Connect(function(dt)
 	if SpeedEnabled then
@@ -94,10 +101,11 @@ RunService.RenderStepped:Connect(function(dt)
 end)
 
 -------------------------------------------------
--- 🌊 Walk on Water System
+-- 🌊 WALK ON WATER (Improved)
 -------------------------------------------------
 RunService.RenderStepped:Connect(function()
 	if not WalkOnWaterEnabled then return end
+
 	local c, hrp, hum = GetChar()
 	if not (c and hrp and hum) then return end
 
@@ -111,15 +119,16 @@ RunService.RenderStepped:Connect(function()
 	local result = Workspace:Raycast(rayOrigin, rayDirection, params)
 	if result and result.Material == Enum.Material.Water then
 		local waterY = result.Position.Y
-		if hrp.Position.Y < waterY + 3 then
-			hrp.Velocity = Vector3.zero
-			hrp.CFrame = CFrame.new(hrp.Position.X, waterY + 3, hrp.Position.Z)
+		if hrp.Position.Y < waterY + 2.8 then
+			-- Smooth floating effect
+			hrp.AssemblyLinearVelocity = Vector3.new(0, 3, 0)
+			hrp.CFrame = hrp.CFrame:Lerp(CFrame.new(hrp.Position.X, waterY + 3, hrp.Position.Z), 0.3)
 		end
 	end
 end)
 
 -------------------------------------------------
--- 🌍 TELEPORT TAB (Sea 3 Full Library)
+-- 🌍 TELEPORT TAB (SEA 3)
 -------------------------------------------------
 local TeleportTab = Window:CreateTab("Teleport", 6034287595)
 
@@ -141,20 +150,19 @@ local Islands = {
 }
 
 local CustomSpots = {}
-local SelectedLocation = nil
+local SelectedLocation
 local TweenMode = true
 
--- 🌀 Tween Teleport
+-- 🚀 Tween teleport (Safe)
 local function TweenTeleport(pos)
 	local _, hrp = GetChar()
 	if not hrp then return end
 	local dist = (hrp.Position - pos).Magnitude
-	local tweenTime = math.clamp(dist / 300, 1, 10)
+	local tweenTime = math.clamp(dist / 250, 1, 12)
 	local tween = TweenService:Create(hrp, TweenInfo.new(tweenTime, Enum.EasingStyle.Linear), {CFrame = CFrame.new(pos)})
 	tween:Play()
 end
 
--- ⚡ Instant Teleport
 local function InstantTeleport(pos)
 	local _, hrp = GetChar()
 	if hrp then
@@ -162,9 +170,8 @@ local function InstantTeleport(pos)
 	end
 end
 
--- 📜 Dropdown
-local TeleportDropdown
-TeleportDropdown = TeleportTab:CreateDropdown({
+-- Dropdown setup
+local TeleportDropdown = TeleportTab:CreateDropdown({
 	Name = "Select Island (Sea 3)",
 	Options = {},
 	CurrentOption = "",
@@ -175,17 +182,13 @@ TeleportDropdown = TeleportTab:CreateDropdown({
 })
 
 local function RefreshDropdown()
-	local allLocations = {}
-	for name, _ in pairs(Islands) do
-		table.insert(allLocations, name)
-	end
-	for name, _ in pairs(CustomSpots) do
-		table.insert(allLocations, name)
-	end
-	TeleportDropdown:SetOptions(allLocations)
+	local list = {}
+	for name in pairs(Islands) do table.insert(list, name) end
+	for name in pairs(CustomSpots) do table.insert(list, name) end
+	table.sort(list)
+	TeleportDropdown:SetOptions(list)
 end
 
--- 🧭 Tween / Instant Mode
 TeleportTab:CreateToggle({
 	Name = "Tween Mode (Smooth Travel)",
 	CurrentValue = TweenMode,
@@ -194,16 +197,11 @@ TeleportTab:CreateToggle({
 	end
 })
 
--- 🚀 Teleport Button
 TeleportTab:CreateButton({
 	Name = "Teleport Now",
 	Callback = function()
 		if not SelectedLocation then
-			return Rayfield:Notify({
-				Title = "⚠️ Error",
-				Content = "Please select a location first!",
-				Duration = 3
-			})
+			return Rayfield:Notify({ Title = "⚠️ Error", Content = "Please select a location!", Duration = 3 })
 		end
 
 		local pos = Islands[SelectedLocation] or CustomSpots[SelectedLocation]
@@ -211,24 +209,15 @@ TeleportTab:CreateButton({
 			Rayfield:Notify({
 				Title = "🌊 Teleporting",
 				Content = "Traveling to " .. SelectedLocation,
-				Duration = 3
+				Duration = 2
 			})
-			if TweenMode then
-				TweenTeleport(pos)
-			else
-				InstantTeleport(pos)
-			end
+			if TweenMode then TweenTeleport(pos) else InstantTeleport(pos) end
 		else
-			Rayfield:Notify({
-				Title = "⚠️ Error",
-				Content = "Location not found!",
-				Duration = 3
-			})
+			Rayfield:Notify({ Title = "❌ Error", Content = "Location not found!", Duration = 3 })
 		end
 	end
 })
 
--- ➕ Add Custom Location
 TeleportTab:CreateInput({
 	Name = "Add Custom Location (Name)",
 	PlaceholderText = "Example: MySpot",
@@ -238,36 +227,21 @@ TeleportTab:CreateInput({
 		if not hrp or name == "" then return end
 		CustomSpots[name] = hrp.Position
 		RefreshDropdown()
-		Rayfield:Notify({
-			Title = "✅ Saved",
-			Content = "Added custom spot: " .. name,
-			Duration = 3
-		})
+		Rayfield:Notify({ Title = "✅ Saved", Content = "Added spot: " .. name, Duration = 3 })
 	end
 })
 
--- ❌ Delete Custom Location
 TeleportTab:CreateButton({
 	Name = "Delete Selected Location",
 	Callback = function()
 		if CustomSpots[SelectedLocation] then
 			CustomSpots[SelectedLocation] = nil
 			RefreshDropdown()
-			Rayfield:Notify({
-				Title = "🗑️ Deleted",
-				Content = "Removed custom spot: " .. SelectedLocation,
-				Duration = 3
-			})
+			Rayfield:Notify({ Title = "🗑️ Deleted", Content = "Removed custom spot!", Duration = 3 })
 		else
-			Rayfield:Notify({
-				Title = "⚠️ Error",
-				Content = "Only custom spots can be deleted!",
-				Duration = 3
-			})
+			Rayfield:Notify({ Title = "⚠️ Error", Content = "Can only delete custom spots!", Duration = 3 })
 		end
 	end
 })
 
--- 🔄 Load Dropdown
 RefreshDropdown()
-
