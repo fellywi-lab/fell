@@ -24,9 +24,66 @@ local Window = Rayfield:CreateWindow({
 })
 
 -------------------------------------------------
--- 🧍 MAIN TAB
+-- 🧍 INVITE DISCORD
 -------------------------------------------------
-local PlayerTab = Window:CreateTab("Player", 4483362458)
+local PlayerTab = Window:CreateTab("MAIN", 4483362458)
+
+-------------------------------------------------
+-- 💜 DISCORD INVITE BUTTON (Stylish + Functional)
+-------------------------------------------------
+local DiscordInviteLink = "https://discord.gg/Am3HvspbV6" -- ganti dengan link server kamu
+
+-- Tombol dengan warna khas Discord
+local DiscordButton = PlayerTab:CreateButton({
+	Name = "💜 Join Discord Server",
+	Callback = function()
+		local success = false
+
+		pcall(function()
+			if syn and syn.request then
+				syn.request({Url = DiscordInviteLink, Method = "GET"})
+				success = true
+			elseif request then
+				request({Url = DiscordInviteLink, Method = "GET"})
+				success = true
+			elseif http_request then
+				http_request({Url = DiscordInviteLink, Method = "GET"})
+				success = true
+			end
+		end)
+
+		if not success then
+			setclipboard(DiscordInviteLink)
+			Rayfield:Notify({
+				Title = "Discord Invite",
+				Content = "📋 Link Discord disalin ke clipboard!\nTempel di browser untuk join server.",
+				Duration = 4,
+			})
+		else
+			Rayfield:Notify({
+				Title = "Discord Invite",
+				Content = "✅ Membuka Discord server di browser!",
+				Duration = 4,
+			})
+		end
+	end
+})
+
+-- 🌈 Efek animasi tambahan saat tombol diklik (opsional)
+local TweenService = game:GetService("TweenService")
+local ButtonFrame = DiscordButton.Instance or DiscordButton -- antisipasi versi Rayfield
+
+if ButtonFrame
+
+-------------------------------------------------
+-- 🧍 MAIN
+-------------------------------------------------
+local PlayerTab = Window:CreateTab("MAIN", 4483362458)
+
+-------------------------------------------------
+-- 🧍 MISC
+-------------------------------------------------
+local PlayerTab = Window:CreateTab("MISC", 4483362458)
 
 -------------------------------------------------
 -- 👁️ PLAYER ESP (SHOW NAME + DISTANCE)
@@ -119,3 +176,4 @@ Players.PlayerRemoving:Connect(function(plr)
 		esp:Destroy()
 	end
 end)
+
