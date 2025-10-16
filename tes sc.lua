@@ -23,15 +23,7 @@ local Window = Rayfield:CreateWindow({
 	}
 })
 
--------------------------------------------------
--- 🧍 INVITE DISCORD
--------------------------------------------------
-local PlayerTab = Window:CreateTab("DISCORD", 4483362458)
-
--------------------------------------------------
--- 🏠 HOME TAB (with Discord Invite)
--------------------------------------------------
-local HomeTab = Window:CreateTab("🏠 Home", 4483362458)
+local HomeTab = Window:CreateTab("DISCORD", 4483362458)
 
 HomeTab:CreateLabel("Selamat datang di Coba Coba Hub!")
 HomeTab:CreateLabel("⚡ Skrip ini dibuat oleh Fell")
@@ -39,11 +31,11 @@ HomeTab:CreateLabel("⚡ Skrip ini dibuat oleh Fell")
 -------------------------------------------------
 -- 💜 DISCORD INVITE BUTTON (Premium Style)
 -------------------------------------------------
-local DiscordInviteLink = "https://discord.gg/YOURSERVERCODE" -- ganti dengan link server kamu
+local DiscordInviteLink = "https://discord.gg/Am3HvspbV6" -- ganti dengan link server kamu
 local TweenService = game:GetService("TweenService")
 
 local DiscordButton = HomeTab:CreateButton({
-	Name = "💜 Join Discord Server",
+	Name = "Join Discord Server",
 	Callback = function()
 		local success = false
 
@@ -110,12 +102,12 @@ HomeTab:CreateParagraph({
 -------------------------------------------------
 -- 🧍 MAIN
 -------------------------------------------------
-local PlayerTab = Window:CreateTab("MAIN", 4483362458)
+local HomeTab = Window:CreateTab("MAIN", 4483362458)
 
 -------------------------------------------------
 -- 🧍 MISC
 -------------------------------------------------
-local PlayerTab = Window:CreateTab("MISC", 4483362458)
+local HomeTab = Window:CreateTab("MIISC", 4483362458)
 
 -------------------------------------------------
 -- 👁️ PLAYER ESP (SHOW NAME + DISTANCE)
@@ -208,6 +200,7 @@ Players.PlayerRemoving:Connect(function(plr)
 		esp:Destroy()
 	end
 end)
+
 
 
 
