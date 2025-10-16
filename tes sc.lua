@@ -95,3 +95,31 @@ player.CharacterAdded:Connect(function(char)
     char:WaitForChild("Humanoid")
     velocity = Vector3.zero
 end)
+
+-------------------------------------------------
+-- ♾️ INFINITE JUMP FEATURE
+-------------------------------------------------
+local InfiniteJumpEnabled = false
+
+-- Tambahkan ke tab Player
+PlayerTab:CreateToggle({
+	Name = "Infinite Jump",
+	CurrentValue = false,
+	Flag = "InfiniteJumpToggle",
+	Callback = function(v)
+		InfiniteJumpEnabled = v
+	end
+})
+
+-- Deteksi saat tombol spasi ditekan
+local UserInputService = game:GetService("UserInputService")
+
+UserInputService.JumpRequest:Connect(function()
+	if InfiniteJumpEnabled then
+		local character = player.Character
+		if character and character:FindFirstChildOfClass("Humanoid") then
+			character:FindFirstChildOfClass("Humanoid"):ChangeState(Enum.HumanoidStateType.Jumping)
+		end
+	end
+end)
+
