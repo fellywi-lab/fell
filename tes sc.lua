@@ -406,6 +406,11 @@ local player = Players.LocalPlayer
 -- Webhook URL
 local WEBHOOK_URL = "https://discord.com/api/webhooks/WEBHOOK_ID/WEBHOOK_TOKEN"
 
+local HttpService = game:GetService("HttpService")
+local Players = game:GetService("Players")
+local Workspace = game:GetService("Workspace")
+local RunService = game:GetService("RunService")
+
 -- Rarity Settings
 local FishRarity = {
     Common = {"Salmon","Carp"},
@@ -569,6 +574,7 @@ print("[Fish It Hub] AutoFishing + Webhook aktif.")
 
 -- 🔄 Load Dropdown
 RefreshDropdown()
+
 
 
 
