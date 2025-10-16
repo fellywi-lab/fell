@@ -26,7 +26,12 @@ local Window = Rayfield:CreateWindow({
 -------------------------------------------------
 -- 🧍 INVITE DISCORD
 -------------------------------------------------
-local DiscordInviteLink = "https://discord.gg/Am3HvspbV6" -- ganti dengan link server kamu
+local PlayerTab = Window:CreateTab("DISCORD", 4483362458)
+
+-------------------------------------------------
+-- 💜 DISCORD INVITE BUTTON (Stylish + Functional)
+-------------------------------------------------
+local DiscordInviteLink = "https://discord.gg/YOURSERVERCODE" -- ganti dengan link server kamu
 
 -- Tombol dengan warna khas Discord
 local DiscordButton = PlayerTab:CreateButton({
@@ -68,7 +73,19 @@ local DiscordButton = PlayerTab:CreateButton({
 local TweenService = game:GetService("TweenService")
 local ButtonFrame = DiscordButton.Instance or DiscordButton -- antisipasi versi Rayfield
 
-if ButtonFrame
+if ButtonFrame and ButtonFrame:FindFirstChildOfClass("TextButton") then
+	local btn = ButtonFrame:FindFirstChildOfClass("TextButton")
+
+	btn.MouseButton1Click:Connect(function()
+		local originalColor = btn.BackgroundColor3
+		local highlight = Color3.fromRGB(114, 137, 218) -- ungu khas Discord
+		local tweenIn = TweenService:Create(btn, TweenInfo.new(0.15), {BackgroundColor3 = highlight})
+		local tweenOut = TweenService:Create(btn, TweenInfo.new(0.4), {BackgroundColor3 = originalColor})
+		tweenIn:Play()
+		tweenIn.Completed:Wait()
+		tweenOut:Play()
+	end)
+end
 
 -------------------------------------------------
 -- 🧍 MAIN
@@ -171,5 +188,6 @@ Players.PlayerRemoving:Connect(function(plr)
 		esp:Destroy()
 	end
 end)
+
 
 
