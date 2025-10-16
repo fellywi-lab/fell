@@ -107,11 +107,8 @@ local HomeTab = Window:CreateTab("MAIN", 4483362458)
 -------------------------------------------------
 -- 🧍 MISC
 -------------------------------------------------
-local HomeTab = Window:CreateTab("MIISC", 4483362458)
+local HomeTab = Window:CreateTab("MISC", 4483362458)
 
--------------------------------------------------
--- 👁️ PLAYER ESP (SHOW NAME + DISTANCE)
--------------------------------------------------
 local ESPEnabled = false
 local ESPFolder = Instance.new("Folder")
 ESPFolder.Name = "ESPFolder"
@@ -200,6 +197,7 @@ Players.PlayerRemoving:Connect(function(plr)
 		esp:Destroy()
 	end
 end)
+
 
 
 
